@@ -6,8 +6,8 @@ username and password.
 ## Usage
 
 ```bash
-./ldap-util -h=<hostname> -bindUser=uid=username,ou=Users,dc=company,dc=com -bindPass=<password>
-✓ Connected to LDAP Server
-✓ Bind Complete
-Finished.
+$ ./ldap-util -h=<hostname> -bindUser=uid=username,ou=Users,dc=company,dc=com -bindPass=<password>
+$ ✓ Connected to LDAP Server
+$ ✓ Bind Complete
+$ Finished.
 ```
