@@ -5,29 +5,39 @@ import (
 	"flag"
 	"fmt"
 	"net"
+	"os"
 	"strconv"
 
 	"gopkg.in/ldap.v2"
 )
 
-var hostname = ""
-var port = 389
-var useTLS = false
-var bindUser = ""
-var bindPass = ""
+var (
+	hostname string
+	port = 389
+
+	useTLS bool
+
+	bindUser string
+	bindPass string
+)
 
 func main() {
-	flag.StringVar(&hostname, "h", "", "LDAP Hostname")
-	flag.IntVar(&port, "p", 389, "LDAP Port")
+	flag.StringVar(&hostname, "h", hostname, "LDAP Hostname")
+	flag.IntVar(&port, "p", port, "LDAP Port")
 	flag.BoolVar(&useTLS, "tls", useTLS, "LDAP use tls")
 	flag.StringVar(&bindUser, "bindUser", bindUser, "LDAP Bind Username")
 	flag.StringVar(&bindPass, "bindPass", bindPass, "LDAP Bind Password")
 	flag.Parse()
 
 	addr := net.JoinHostPort(hostname, strconv.Itoa(port))
+
+	fmt.Printf("\nGot options:\n\tAddr: %s\n\tUse TLS: %t\n\tBind User: %s\n\tBind Pass: %s\n\n", addr, useTLS, bindUser, bindPass)
+
+	fmt.Println("Attempting to dial the LDAP server...")
 	l, err := ldap.Dial("tcp", addr)
 	if err != nil {
-		panic(err)
+		fmt.Printf("Failed to dial the LDAP server: %v\n", err)
+		os.Exit(1)
 	}
 	defer l.Close()
 
@@ -35,17 +45,19 @@ func main() {
 
 	// Reconnect with TLS
 	if useTLS {
-		err = l.StartTLS(&tls.Config{InsecureSkipVerify: true})
-		if err != nil {
-			panic(err)
+		fmt.Println("Attempting to start TLS on the LDAP connection...")
+		if err = l.StartTLS(&tls.Config{InsecureSkipVerify: true}); err != nil {
+			fmt.Printf("Could not start TLS on the LDAP server connection: %v\n", err)
+			os.Exit(1)
 		}
 		fmt.Println("✓ Start TLS Complete")
 	}
 
 	if err = l.Bind(bindUser, bindPass); err != nil {
-		panic(err)
+		fmt.Printf("Failed to bind on the LDAP server connection: %v\n", err)
+		os.Exit(1)
 	}
-	fmt.Println("✓ Bind Complete")
 
+	fmt.Println("✓ Bind Complete")
 	fmt.Println("Finished.")
 }
