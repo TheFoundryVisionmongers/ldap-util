@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"time"
 
 	"gopkg.in/ldap.v2"
 )
@@ -57,7 +58,14 @@ func main() {
 		fmt.Printf("Failed to bind on the LDAP server connection: %v\n", err)
 		os.Exit(1)
 	}
-
 	fmt.Println("✓ Bind Complete")
+
+	fmt.Println("Starting message listening loop for a few seconds...")
+	l.Start()
+	time.Sleep(time.Second * 2)
+	fmt.Println("No issues on message loop, closing connection")
+
+	l.Close()
+
 	fmt.Println("Finished.")
 }
