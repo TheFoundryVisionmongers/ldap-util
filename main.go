@@ -38,8 +38,8 @@ func getResponse(prompt string, validate func(string) bool) string {
 }
 
 func getUsernamePass() (string, string) {
-	username := getResponse("Please enter the username you'd like to log into the LDAP server with", func(s string) bool { return s != ""})
-	password := getResponse("Please enter the password you'd like to log into the LDAP server with. Note: this value will be printed to the console and may be output during the testing process", func(_ string) bool {return true})
+	username := getResponse("Please enter the username you'd like to log into the LDAP server with:", func(s string) bool { return s != ""})
+	password := getResponse("Please enter the password you'd like to log into the LDAP server with. Note: this value will be printed to the console and may be output during the testing process:", func(_ string) bool {return true})
 
 	return username, password
 }
@@ -132,7 +132,7 @@ func main() {
 		configPath = *configFlag
 	}
 
-	fmt.Printf("Loading config from %s", configPath)
+	fmt.Printf("Loading config from %s\n", configPath)
 
 	if err := processYML(); err != nil {
 		fmt.Printf("Unable to load config from file\n")
@@ -148,7 +148,7 @@ func main() {
 
 	addr := net.JoinHostPort(LDAPHost(), strconv.Itoa(LDAPPort()))
 
-	fmt.Println("Attempting to dial the LDAP server...")
+	fmt.Printf("Attempting to dial the LDAP server at %s...\n", addr)
 	l, err := ldap.Dial("tcp", addr)
 	if err != nil {
 		fmt.Printf("Failed to dial the LDAP server: %v\n", err)
@@ -228,7 +228,7 @@ func main() {
 		nil,
 	)
 
-	fmt.Printf("Searching for LDAP Users\n\tDN: %s\n\tFilter: %s\n\t Attributes %v", req.BaseDN, req.Filter, req.Attributes)
+	fmt.Printf("Searching for LDAP Users\n\tDN: %s\n\tFilter: %s\n\t Attributes %v\n", req.BaseDN, req.Filter, req.Attributes)
 
 	sr, err := l.Search(req)
 	if err != nil {
