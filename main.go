@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"strings"
 
 	"gopkg.in/ldap.v2"
 )
@@ -38,8 +39,8 @@ func getResponse(prompt string, validate func(string) bool) string {
 }
 
 func getUsernamePass() (string, string) {
-	username := getResponse("Please enter the username you'd like to log into the LDAP server with:", func(s string) bool { return s != ""})
-	password := getResponse("Please enter the password you'd like to log into the LDAP server with. Note: this value will be printed to the console and may be output during the testing process:", func(_ string) bool {return true})
+	username := getResponse("Please enter the username you'd like to log into the LDAP server with:", func(s string) bool { return s != "" })
+	password := getResponse("Please enter the password you'd like to log into the LDAP server with. Note: this value will be printed to the console and may be output during the testing process:", func(_ string) bool { return true })
 
 	return username, password
 }
@@ -123,12 +124,12 @@ func main() {
 	configFlag := flag.String("config-file", configPath, "The full path to the YAML config file")
 	flag.Parse()
 
-	if getResponse("This test application will read and output all LDAP data from your Flix config file.  This may include sensitive passwords.  Do you wish to continue? [y/N]", func(_ string) bool {return true}) != "y" {
+	if getResponse("This test application will read and output all LDAP data from your Flix config file.  This may include sensitive passwords.  Do you wish to continue? [y/N]", func(_ string) bool { return true }) != "y" {
 		fmt.Println("Exiting test application due to user response.")
 		os.Exit(0)
 	}
 
-	if configFlag != nil && *configFlag != ""{
+	if configFlag != nil && *configFlag != "" {
 		configPath = *configFlag
 	}
 
@@ -146,7 +147,13 @@ func main() {
 
 	fmt.Printf("Loaded config: %v\n", loadedConfig)
 
-	addr := net.JoinHostPort(LDAPHost(), strconv.Itoa(LDAPPort()))
+	// Use default port if not set
+	ldapPort := LDAPPort()
+	if ldapPort == 0 {
+		fmt.Println("LDAP port not set in config, will use 389 as the port")
+		ldapPort = 389
+	}
+	addr := net.JoinHostPort(LDAPHost(), strconv.Itoa(ldapPort))
 
 	fmt.Printf("Attempting to dial the LDAP server at %s...\n", addr)
 	l, err := ldap.Dial("tcp", addr)
@@ -218,6 +225,9 @@ func main() {
 	if LDAPUserSearchNameAttr() != "" {
 		attributes = append(attributes, LDAPUserSearchNameAttr())
 	}
+	if LDAPUserSearchUserAttr() != "" {
+		attributes = append(attributes, LDAPUserSearchUserAttr())
+	}
 
 	// Search for the given username
 	req := ldap.NewSearchRequest(
@@ -250,13 +260,18 @@ func main() {
 		os.Exit(1)
 	}
 
+	usernameAttr := LDAPUserSearchUserAttr()
+	if usernameAttr == "" {
+		usernameAttr = "uid"
+	}
+
 	fmt.Printf(
 		"Got user details:\n\tUsername: %s\n\tCN: %s\n\tMail: %s\n\tDisplay name: %s\n",
-		sr.Entries[0].GetAttributeValue("uid"),
-		          sr.Entries[0].GetAttributeValue("cn"),
-		       sr.Entries[0].GetAttributeValue("mail"),
+		sr.Entries[0].GetAttributeValue(usernameAttr),
+		sr.Entries[0].GetAttributeValue("cn"),
+		sr.Entries[0].GetAttributeValue("mail"),
 		sr.Entries[0].GetAttributeValue("displayName"),
-		)
+	)
 
 	// set the name as the specified search name attribute
 	if LDAPUserSearchNameAttr() != "" {
@@ -268,7 +283,44 @@ func main() {
 		fmt.Printf("Failed to query groups: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Printf("✓ Got group names: %v\n", groupNames)
+	fmt.Printf("✓ Got group names: [%s]\n", strings.Join(groupNames, ", "))
+
+	fmt.Println("Attempting to filter group names based on prefix and suffix")
+	fmt.Printf("\tPrefix: %s\n", LDAPGroupPrefix())
+	fmt.Printf("\tSuffix: %s\n", LDAPGroupSuffix())
+
+	var matchedGroupNames []string
+
+	for _, gn := range groupNames {
+		fmt.Println("---")
+
+		fmt.Printf("Testing group name '%s'\n", gn)
+
+		if len(gn) < len(LDAPGroupPrefix()) {
+			fmt.Println("Group name is too short to match prefix")
+			continue
+		}
+		if len(gn) < len(LDAPGroupSuffix()) {
+			fmt.Println("Group name is too short to match suffix")
+			continue
+		}
+
+		if gn[:len(LDAPGroupPrefix())] != LDAPGroupPrefix() {
+			fmt.Println("First part of group name does not match prefix")
+			fmt.Printf("\t%s != %s\n", gn[:len(LDAPGroupPrefix())], LDAPGroupPrefix())
+			continue
+		}
+		if gn[len(gn)-len(LDAPGroupSuffix()):] == LDAPGroupSuffix() {
+			fmt.Println("Last part of group name does not match suffix")
+			fmt.Printf("\t%s != %s\n", gn[:len(LDAPGroupSuffix())], LDAPGroupSuffix())
+			continue
+		}
+
+		fmt.Println("Group name matches prefix and suffix")
+		matchedGroupNames = append(matchedGroupNames, gn)
+	}
+
+	fmt.Printf("Matched group names: [%s]\n", strings.Join(matchedGroupNames, ", "))
 
 	fmt.Println("Closing connection to LDAP server")
 	l.Close()
