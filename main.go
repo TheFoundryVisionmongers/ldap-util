@@ -310,7 +310,7 @@ func main() {
 			fmt.Printf("\t%s != %s\n", gn[:len(LDAPGroupPrefix())], LDAPGroupPrefix())
 			continue
 		}
-		if gn[len(gn)-len(LDAPGroupSuffix()):] == LDAPGroupSuffix() {
+		if gn[len(gn)-len(LDAPGroupSuffix()):] != LDAPGroupSuffix() {
 			fmt.Println("Last part of group name does not match suffix")
 			fmt.Printf("\t%s != %s\n", gn[:len(LDAPGroupSuffix())], LDAPGroupSuffix())
 			continue
