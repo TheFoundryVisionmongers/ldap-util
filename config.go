@@ -12,7 +12,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	configPath = filepath.Join(pwd, "config.yml")
+	configPath = filepath.Join(filepath.Dir(pwd), "config.yml")
 }
 
 var (
