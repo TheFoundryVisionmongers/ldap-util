@@ -90,7 +90,7 @@ func groups(user ldap.Entry, l *ldap.Conn) ([]string, error) {
 			BaseDN:     baseDN,
 			Filter:     filter,
 			Scope:      ldap.ScopeWholeSubtree,
-			Attributes: []string{LDAPGroupSearchNameAttr()},
+			Attributes: []string{LDAPGroupSearchNameAttr(), LDAPGroupSearchUserAttr()},
 		}
 
 		fmt.Printf("Searching for LDAP groups:\n\tBaseDN: %s\n\tFilter: %s\n\tAttributes: %v\n", req.BaseDN, req.Filter, req.Attributes)
