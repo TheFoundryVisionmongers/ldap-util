@@ -1,5 +1,6 @@
 ldap-utils
 ldap-utils-linux
 ldap-utils-macos
+ldap-utils-windows.exe
 .DS_Store
 .idea

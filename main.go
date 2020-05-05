@@ -228,6 +228,11 @@ func main() {
 	if LDAPUserSearchUserAttr() != "" {
 		attributes = append(attributes, LDAPUserSearchUserAttr())
 	}
+	// We need to add the group-user attribute, so the user is returned with that attribute, then we can map it to a
+	// group.
+	if LDAPGroupSearchUserAttr() != "" {
+		attributes = append(attributes, LDAPGroupSearchUserAttr())
+	}
 
 	// Search for the given username
 	req := ldap.NewSearchRequest(
@@ -272,6 +277,13 @@ func main() {
 		sr.Entries[0].GetAttributeValue("mail"),
 		sr.Entries[0].GetAttributeValue("displayName"),
 	)
+
+	userAttrsStrings := make([]string, len(sr.Entries[0].Attributes))
+	for i, ea := range sr.Entries[0].Attributes {
+		valStr := strings.Join(ea.Values, ", ")
+		userAttrsStrings[i] = fmt.Sprintf("%s:%s", ea.Name, valStr)
+	}
+	fmt.Printf("Got user attributes: %s\n", strings.Join(userAttrsStrings, ", "))
 
 	// set the name as the specified search name attribute
 	if LDAPUserSearchNameAttr() != "" {
