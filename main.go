@@ -278,6 +278,13 @@ func main() {
 		sr.Entries[0].GetAttributeValue("displayName"),
 	)
 
+	userAttrsStrings := make([]string, len(sr.Entries[0].Attributes))
+	for i, ea := range sr.Entries[0].Attributes {
+		valStr := strings.Join(ea.Values, ", ")
+		userAttrsStrings[i] = fmt.Sprintf("%s:%s", ea.Name, valStr)
+	}
+	fmt.Printf("Got user attributes: %s\n", strings.Join(userAttrsStrings, ", "))
+
 	// set the name as the specified search name attribute
 	if LDAPUserSearchNameAttr() != "" {
 		fmt.Printf("UserSearchNameAttr set, overriding display name to %s\n", sr.Entries[0].GetAttributeValue(LDAPUserSearchNameAttr()))
