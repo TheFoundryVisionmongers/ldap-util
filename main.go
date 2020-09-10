@@ -12,6 +12,12 @@ import (
 	"gopkg.in/ldap.v2"
 )
 
+const (
+	// defaultLDAPTLSPort is the default port for using TLS over LDAP.  If an LDAP server is running on this, it will
+	// need TLS setup during dial, whereas other ports will accept upgrading to TLS with `.StartTLS(...)`.
+	defaultLDAPTLSPort = 636
+)
+
 // bold wraps the input string in special characters which make text bold in a bash terminal.
 func bold(input string) string {
 	// \033[1m starts printing in bold, \033[0m stops the bold
@@ -156,7 +162,17 @@ func main() {
 	addr := net.JoinHostPort(LDAPHost(), strconv.Itoa(ldapPort))
 
 	fmt.Printf("Attempting to dial the LDAP server at %s...\n", addr)
-	l, err := ldap.Dial("tcp", addr)
+
+	var l *ldap.Conn
+	var err error
+	tlsConf := tls.Config{InsecureSkipVerify: true}
+
+	// If the config needs the default LDAP TLS port, we need to use DialTLS, otherwise a normal Dial is correct.
+	if LDAPPort() != defaultLDAPTLSPort {
+		l, err = ldap.Dial("tcp", addr)
+	} else {
+		l, err = ldap.DialTLS("tcp", addr, &tlsConf)
+	}
 	if err != nil {
 		fmt.Printf("Failed to dial the LDAP server: %v\n", err)
 		os.Exit(1)
@@ -166,9 +182,9 @@ func main() {
 	fmt.Println("✓ Connected to LDAP Server")
 
 	// Reconnect with TLS
-	if LDAPUseSSL() {
+	if LDAPUseSSL() && LDAPPort() == defaultLDAPTLSPort {
 		fmt.Println("Attempting to start TLS on the LDAP connection...")
-		if err = l.StartTLS(&tls.Config{InsecureSkipVerify: true}); err != nil {
+		if err = l.StartTLS(&tlsConf); err != nil {
 			fmt.Printf("Could not start TLS on the LDAP server connection: %v\n", err)
 			os.Exit(1)
 		}
