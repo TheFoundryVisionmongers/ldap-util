@@ -182,7 +182,7 @@ func main() {
 	fmt.Println("✓ Connected to LDAP Server")
 
 	// Reconnect with TLS
-	if LDAPUseSSL() && LDAPPort() == defaultLDAPTLSPort {
+	if LDAPUseSSL() && LDAPPort() != defaultLDAPTLSPort {
 		fmt.Println("Attempting to start TLS on the LDAP connection...")
 		if err = l.StartTLS(&tlsConf); err != nil {
 			fmt.Printf("Could not start TLS on the LDAP server connection: %v\n", err)
