@@ -28,16 +28,21 @@ type config struct {
 
 // ldapConfig is the configuration struct for LDAP Authentication settings
 type ldapConfig struct {
-	Base         string                `yaml:"base"`
-	BindPassword string                `yaml:"bind_pass"`
-	BindUser     string                `yaml:"bind_user"`
-	GroupSearch  ldapGroupSearchConfig `yaml:"group_search"`
-	Host         string                `yaml:"host"`
-	Port         int                   `yaml:"port"`
-	SelfAuth     bool                  `yaml:"self_auth"`
-	UseLDAP      bool                  `yaml:"use_ldap"`
-	UserSearch   ldapUserSearchConfig  `yaml:"user_search"`
-	UseSSL       bool                  `yaml:"use_ssl"`
+	Base            string                `yaml:"base"`
+	BindPassword    string                `yaml:"bind_pass"`
+	BindUser        string                `yaml:"bind_user"`
+	GroupSearch     ldapGroupSearchConfig `yaml:"group_search"`
+	Host            string                `yaml:"host"`
+	Port            int                   `yaml:"port"`
+	SelfAuth        bool                  `yaml:"self_auth"`
+	UseLDAP         bool                  `yaml:"use_ldap"`
+	UserSearch      ldapUserSearchConfig  `yaml:"user_search"`
+	UseSSL          bool                  `yaml:"use_ssl"`
+	Roles           []ldapRolesConfig     `yaml:"roles"`
+	AllowedUsers    []string              `yaml:"allowed_users"`
+	ForbiddenUsers  []string              `yaml:"blocked_users"`
+	RequiredGroups  []string              `yaml:"required_groups"`
+	ForbiddenGroups []string              `yaml:"forbidden_groups"`
 }
 
 type ldapGroupSearchConfig struct {
@@ -59,6 +64,17 @@ type ldapGroupSearchConfig struct {
 	NameAttr    string `yaml:"name_attr"`
 	GroupPrefix string `yaml:"group_prefix"`
 	GroupSuffix string `yaml:"group_suffix"`
+}
+
+type ldapRolesConfig struct {
+	// GroupPrefix specifies the prefix of the group to match.
+	GroupPrefix string `yaml:"group_prefix"`
+	// GroupSuffix specifies the suffix of the group to match.
+	GroupSuffix string `yaml:"group_suffix"`
+	// NameAttr is the attribute of the group to match. If empty, defaults to NameAttr of the group search config.
+	NameAttr string `yaml:"name_attr"`
+	// Role is the role to use for users in groups matched by Pattern.
+	Role string `yaml:"role"`
 }
 
 type ldapUserSearchConfig struct {
