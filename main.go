@@ -126,6 +126,7 @@ func groups(user ldap.Entry, l *ldap.Conn) ([]string, error) {
 	return groupNames, nil
 }
 
+//nolint:funlen // Core utility app loop, loc irrelevant
 func main() {
 	configFlag := flag.String("config-file", configPath, "The full path to the YAML config file")
 	flag.Parse()
@@ -165,6 +166,7 @@ func main() {
 
 	var l *ldap.Conn
 	var err error
+	//nolint:gosec // Secure verification not supported by Flix
 	tlsConf := tls.Config{InsecureSkipVerify: true}
 
 	// If the config needs the default LDAP TLS port, we need to use DialTLS, otherwise a normal Dial is correct.
@@ -223,7 +225,8 @@ func main() {
 		}
 		fmt.Printf("✓ Established bind user - %s:%s\n", bindUser, bindPass)
 
-		if err = l.Bind(bindUser, bindPass); err != nil {
+		//nolint:govet // Shadowing false positive
+		if err := l.Bind(bindUser, bindPass); err != nil {
 			fmt.Printf("Could not bind to LDAP server: %v\n", err)
 			os.Exit(1)
 		}
@@ -276,6 +279,7 @@ func main() {
 
 	// Bind as the user to verify their password
 	fmt.Printf("Binding as returned user to verify credentials - %s:%s\n", userdn, password)
+	//nolint:govet // Shadowing false positive
 	if err := l.Bind(userdn, password); err != nil {
 		fmt.Printf("Credentials mismatch: %v\n", err)
 		os.Exit(1)
@@ -317,7 +321,7 @@ func main() {
 	fmt.Printf("\tPrefix: %s\n", LDAPGroupPrefix())
 	fmt.Printf("\tSuffix: %s\n", LDAPGroupSuffix())
 
-	var matchedGroupNames []string
+	matchedGroupNames := make([]string, 0, len(groupNames))
 
 	for _, gn := range groupNames {
 		fmt.Println("---")

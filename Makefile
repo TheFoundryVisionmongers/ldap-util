@@ -28,3 +28,12 @@ ldap-utils-macos-arm:$(GO_FILES)
 
 ldap-utils-windows.exe:$(GO_FILES)
 	$(GO_CMD_WINDOWS) build -o $@ $^
+
+.PHONY:lint
+lint:$(GO_FILES)
+	go vet --all $^
+ifeq (, $(shell which golangci-lint))
+	echo "golangci-lint not in path, skipping check"
+else
+	golangci-lint run -v -c .golangci.yml $^
+endif

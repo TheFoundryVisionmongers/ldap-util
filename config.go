@@ -89,7 +89,8 @@ type ldapUserSearchConfig struct {
 }
 
 func processYML() error {
-	f, err := os.OpenFile(configPath, os.O_RDONLY, 0444)
+	const readOnlyPerm = 0444
+	f, err := os.OpenFile(configPath, os.O_RDONLY, readOnlyPerm)
 	if err != nil {
 		return err
 	}
