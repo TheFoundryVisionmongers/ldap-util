@@ -73,7 +73,7 @@ type ldapUserSearchConfig struct {
 }
 
 func processYML() error {
-	f, err := os.OpenFile(configPath, os.O_RDONLY, 444)
+	f, err := os.OpenFile(configPath, os.O_RDONLY, 0444)
 	if err != nil {
 		return err
 	}
